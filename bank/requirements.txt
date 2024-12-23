@@ -1,0 +1,17 @@
+# 웹 자동화
+selenium==4.19.0
+pyperclip==1.9.0
+keyboard==0.13.5
+
+# 환경변수 관리
+python-dotenv==1.0.1
+
+# OpenAI API
+openai==1.58.1
+
+# 데이터베이스
+pymongo==4.10.1
+
+# 웹 스크래핑 및 HTTP 요청
+requests==2.32.3
+beautifulsoup4==4.12.3
