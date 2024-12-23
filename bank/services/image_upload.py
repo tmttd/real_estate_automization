@@ -156,14 +156,14 @@ def get_specific_image(file_path: str) -> str:
     """
     if not os.path.exists(file_path):
         print(f"지정된 파일을 찾을 수 없습니다: {file_path}")
-        return []  # 빈 리스트 반환
+        return ''
     
     if not os.path.isfile(file_path):
         print(f"지정된 경로가 파일이 아닙니다: {file_path}")
-        return []  # 빈 리스트 반환
+        return ''
         
     if not file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
         print(f"지원하지 않는 파일 형식입니다: {file_path}")
-        return []  # 빈 리스트 반환
+        return ''
     
     return file_path

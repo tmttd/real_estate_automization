@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -21,6 +22,7 @@ from selenium.common.exceptions import NoAlertPresentException
 from typing import List
 import keyboard
 from dotenv import load_dotenv
+import pyautogui
 
 # .env 파일 로드
 load_dotenv()
@@ -79,7 +81,19 @@ class NaverBlogPoster:
         
         button = self.driver.find_element(By.XPATH, '//*[@id="log.login"]')
         button.click()
-        time.sleep(7)
+        time.sleep(1)
+        
+        # 화면 중앙 왼쪽 끝 클릭
+        screen_width, screen_height = pyautogui.size()
+        pyautogui.click(10, screen_height // 2)  # x좌표를 10으로 설정하여 왼쪽 끝으로
+        time.sleep(1)
+        
+        # tab과 enter 키 입력
+        keyboard.press_and_release('tab')
+        keyboard.press_and_release('enter')
+        
+        time.sleep(5)
+
 
     def write_post(self, title, information, description, complex_name, property_url):
         # iframe 전환
@@ -190,4 +204,23 @@ class NaverBlogPoster:
 
         except Exception as e:
             print("발행 과정에서 오류 발생:", str(e))
+            return False
+        
+    def temp_save_post(self):
+        try:
+            # 저장 버튼 찾기 및 클릭
+            wait = WebDriverWait(self.driver, 10)
+            save_button = wait.until(EC.element_to_be_clickable(
+                (By.CLASS_NAME, "save_btn__bzc5B")
+            ))
+            save_button.click()
+            
+            # 저장 완료될 때까지 잠시 대기
+            time.sleep(2)
+            
+            print("포스트 임시저장 완료")
+            return True
+        
+        except Exception as e:
+            print(f"임시저장 중 오류 발생: {str(e)}")
             return False

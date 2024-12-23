@@ -10,6 +10,7 @@ from selenium import webdriver
 from dotenv import load_dotenv
 import os
 import sys
+import pyautogui
 
 # .env 파일 로드
 load_dotenv()
@@ -80,6 +81,9 @@ def setup_chrome_options():
     }
     options.add_experimental_option("prefs", prefs)
     
+    # 브라우저 최대화 설정
+    options.add_argument("--start-maximized")
+    
     # 추가 설정
     options.add_argument('--disable-gpu')
     options.add_argument('--no-sandbox')
@@ -124,10 +128,23 @@ def main():
             print("매물번호가 입력되지 않았습니다.")
             return
         
-        # Chrome 옵션 설정 및 드라이버 생성
+        # Chrome 옵션 설정
         chrome_options = setup_chrome_options()
+        
+        # 화면 해상도 얻기 (pyautogui 사용)
+        screen_width, screen_height = pyautogui.size()
+        
+        # 창 크기 옵션 추가
+        chrome_options.add_argument(f"--window-size={screen_width},{screen_height}")
+        chrome_options.add_argument("--window-position=0,0")
+        chrome_options.add_argument("--start-maximized")
+        
+        # 드라이버 생성
         service = webdriver.ChromeService(executable_path=chrome_driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
+        
+        # 브라우저 최대화
+        driver.maximize_window()
         
         # 1. 매물 정보 크롤링
         crawler = PropertyCrawler(driver=driver)
@@ -168,10 +185,10 @@ def main():
         add_random_delay()
         
         # 발행
-        if poster.publish_post():
-            print("포스트가 성공적으로 발행되었습니다.")
+        if poster.temp_save_post():
+            print("포스트가 성공적으로 임시저장되었습니다.")
         else:
-            print("포스트 발행에 실패했습니다.")
+            print("포스트 임시저장에 실패했습니다.")
             
     except Exception as e:
         print(f"작업 중 오류 발생: {str(e)}")

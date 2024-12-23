@@ -21,11 +21,6 @@ class PropertyCrawler:
         self.client = MongoClient('mongodb://localhost:27017/')
         self.db = self.client['property_db']
         
-        # 스크린 크기 랜덤화
-        width = random.randint(1024, 1920)
-        height = random.randint(768, 1080)
-        self.driver.set_window_size(width, height)
-        
         # JavaScript 실행을 위한 코드 추가
         self.driver.execute_script("""
             Object.defineProperty(navigator, 'webdriver', {
