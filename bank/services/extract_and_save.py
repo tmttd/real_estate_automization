@@ -52,7 +52,7 @@ def extract_and_save_apt(driver, property_id):
         }
         
         # 매물 목록 페이지에서 필요한 정보 추출
-                # 매물 목록 페이지에서 해당 매물 행 찾기
+        # 매물 목록 페이지에서 해당 매물 행 찾기
         row = driver.find_element(By.XPATH, f"//tr[contains(.//a, '{property_id}')]")
         
         # 필요한 정보 추출
@@ -199,30 +199,47 @@ def extract_and_save_apt(driver, property_id):
 # 상가인 경우
 def extract_and_save_market(driver, property_id):
     try:
-        # 1단계: 매물 목록 페이지에서 정보 추출
+        main_window = driver.window_handles[-1]
+        
         property_data = {
             "생성일자": datetime.now(),
             "매물번호": property_id,
         }
         
-        # 매물 목록 페이지에서 필요한 정보 추출
         # 매물 목록 페이지에서 해당 매물 행 찾기
-        row = driver.find_element(By.XPATH, f"//tr[contains(.//a, '{property_id}')]")
+        # 매물번호로 행 찾기
+        row = driver.find_element(By.XPATH, f"//tr[contains(.//a, '{property_id}')]")        
         
-        # 필요한 정보 추출
-        property_data.update({
-            "거래종류": row.find_element(By.XPATH, "./td[3]").text.strip(),
-            "매물종류": row.find_element(By.XPATH, "./td[4]").text.strip(),
-            "소재지": row.find_element(By.XPATH, "./td[5]").text.strip(),
-            "세부단지명": row.find_element(By.XPATH, "./td[7]").text.strip(),
-            "면적": '/'.join(area + "㎡" for area in row.find_element(By.XPATH, "./td[8]").text.strip().split('\n')),
-            "가격": row.find_element(By.XPATH, "./td[9]").text.strip(),
-        })
+        # 필요한 정보 추출 - 인덱스 기반으로 변경
+        try:
+            property_data.update({
+                "거래종류": row.find_elements(By.TAG_NAME, "td")[2].text.strip(),
+                "매물종류": row.find_elements(By.TAG_NAME, "td")[3].text.strip(),
+                "소재지": row.find_elements(By.TAG_NAME, "td")[4].text.strip(),
+                "세부단지명": row.find_elements(By.TAG_NAME, "td")[6].text.strip(),
+                "면적": '/'.join(area + "㎡" for area in row.find_elements(By.TAG_NAME, "td")[7].text.strip().split('\n')),
+                "가격": row.find_elements(By.TAG_NAME, "td")[8].text.strip(),
+            })
+        except Exception as e:
+            print(f"매물 정보 추출 중 오류 발생: {str(e)}")
         
-        # 2단계: 매물 상세 페이지로 이동
-        # property_id 링크 클릭
-        property_link = driver.find_element(By.XPATH, f"//a[@href=\"javascript:goDetail('{property_id}', 'RB', 'A');\"]")
-        property_link.click()
+        # 매물 상세 페이지로 이동
+        try:
+            # 상세 페이지 링크 찾기
+            detail_link = row.find_element(By.XPATH, 
+                f".//a[contains(@href, 'goDetailPop') and contains(text(), '{property_id}')]")
+            detail_link.click()
+            
+            # 페이지가 완전히 로드될 때까지 대기
+            wait = WebDriverWait(driver, 10)
+            wait.until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+            
+            # 새 창으로 전환
+            driver.switch_to.window(driver.window_handles[-1])
+            
+        except Exception as e:
+            print(f"상세 페이지 이동 중 오류 발생: {str(e)}")
+            raise
         
         # 3단계: 매물 상세 페이지에서 정보 추출
         html_content = driver.page_source
@@ -299,7 +316,7 @@ def extract_and_save_market(driver, property_id):
         # 4단계: DB 저장
         try:
             complex_name = property_data['단지명']
-            apt_collection = db['apt']
+            apt_collection = db['commercial']
             
             # property_data에서 단지명 제거 (복사본 생성)
             property_data_to_save = property_data.copy()
@@ -335,7 +352,8 @@ def extract_and_save_market(driver, property_id):
     except Exception as e:
         print(f"매물 크롤링 중 오류 발생: {str(e)}")
 
-    driver.back()
+    driver.close()
+    driver.switch_to.window(main_window)
 
 # 빌라, 단독/다가구 인 경우
 def extract_and_save_villa(driver, property_id):
@@ -453,7 +471,7 @@ def extract_and_save_villa(driver, property_id):
         # 4단계: DB 저장
         try:
             complex_name = property_data['단지명']
-            apt_collection = db['apt']
+            apt_collection = db['villa']
             
             # property_data에서 단지명 제거 (복사본 생성)
             property_data_to_save = property_data.copy()
@@ -607,7 +625,7 @@ def extract_and_save_officetel(driver, property_id):
         # 4단계: DB 저장
         try:
             complex_name = property_data['단지명']
-            apt_collection = db['apt']
+            apt_collection = db['officetel']
             
             # property_data에서 단지명 제거 (복사본 생성)
             property_data_to_save = property_data.copy()
@@ -648,30 +666,47 @@ def extract_and_save_officetel(driver, property_id):
 # 사무실인 경우
 def extract_and_save_office(driver, property_id):
     try:
-        # 1단계: 매물 목록 페이지에서 정보 추출
+        main_window = driver.window_handles[-1]
+        
         property_data = {
             "생성일자": datetime.now(),
             "매물번호": property_id,
         }
         
-        # 매물 목록 페이지에서 필요한 정보 추출
         # 매물 목록 페이지에서 해당 매물 행 찾기
-        row = driver.find_element(By.XPATH, f"//tr[contains(.//a, '{property_id}')]")
+        # 매물번호로 행 찾기
+        row = driver.find_element(By.XPATH, f"//tr[contains(.//a, '{property_id}')]")        
         
-        # 필요한 정보 추출
-        property_data.update({
-            "거래종류": row.find_element(By.XPATH, "./td[3]").text.strip(),
-            "매물종류": row.find_element(By.XPATH, "./td[4]").text.strip(),
-            "소재지": row.find_element(By.XPATH, "./td[5]").text.strip(),
-            "세부단지명": row.find_element(By.XPATH, "./td[7]").text.strip(),
-            "면적": '/'.join(area + "㎡" for area in row.find_element(By.XPATH, "./td[8]").text.strip().split('\n')),
-            "가격": row.find_element(By.XPATH, "./td[9]").text.strip(),
-        })
+        # 필요한 정보 추출 - 인덱스 기반으로 변경
+        try:
+            property_data.update({
+                "거래종류": row.find_elements(By.TAG_NAME, "td")[2].text.strip(),
+                "매물종류": row.find_elements(By.TAG_NAME, "td")[3].text.strip(),
+                "소재지": row.find_elements(By.TAG_NAME, "td")[4].text.strip(),
+                "세부단지명": row.find_elements(By.TAG_NAME, "td")[6].text.strip(),
+                "면적": '/'.join(area + "㎡" for area in row.find_elements(By.TAG_NAME, "td")[7].text.strip().split('\n')),
+                "가격": row.find_elements(By.TAG_NAME, "td")[8].text.strip(),
+            })
+        except Exception as e:
+            print(f"매물 정보 추출 중 오류 발생: {str(e)}")
         
-        # 2단계: 매물 상세 페이지로 이동
-        # property_id 링크 클릭
-        property_link = driver.find_element(By.XPATH, f"//a[@href=\"javascript:goDetail('{property_id}', 'RB', 'A');\"]")
-        property_link.click()
+        # 매물 상세 페이지로 이동
+        try:
+            # 상세 페이지 링크 찾기
+            detail_link = row.find_element(By.XPATH, 
+                f".//a[contains(@href, 'goDetailPop') and contains(text(), '{property_id}')]")
+            detail_link.click()
+            
+            # 페이지가 완전히 로드될 때까지 대기
+            wait = WebDriverWait(driver, 10)
+            wait.until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+            
+            # 새 창으로 전환
+            driver.switch_to.window(driver.window_handles[-1])
+            
+        except Exception as e:
+            print(f"상세 페이지 이동 중 오류 발생: {str(e)}")
+            raise
         
         # 3단계: 매물 상세 페이지에서 정보 추출
         html_content = driver.page_source
@@ -748,7 +783,7 @@ def extract_and_save_office(driver, property_id):
         # 4단계: DB 저장
         try:
             complex_name = property_data['단지명']
-            apt_collection = db['apt']
+            apt_collection = db['office']
             
             # property_data에서 단지명 제거 (복사본 생성)
             property_data_to_save = property_data.copy()
@@ -784,7 +819,8 @@ def extract_and_save_office(driver, property_id):
     except Exception as e:
         print(f"매물 크롤링 중 오류 발생: {str(e)}")
 
-        driver.back()
+    driver.close()
+    driver.switch_to.window(main_window)
 
 def check_property_type(driver, property_id):
     """매물 종류 확인"""
@@ -795,6 +831,8 @@ def check_property_type(driver, property_id):
         row = driver.find_element(By.XPATH, f"//tr[contains(.//a, '{property_id}')]")
         # 네 번째 td에서 매물 종류 가져오기
         property_type = row.find_element(By.XPATH, "./td[4]").text.strip()
+        
+        print(property_type)
         
         if property_type in valid_types:
             return property_type

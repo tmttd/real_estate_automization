@@ -12,7 +12,8 @@ db = client['property_db']
 def download_images(driver, property_id, path):
     
     # 매물번호로 해당 td를 찾고, 그 안에서 ReportGbn이 포함된 링크를 클릭
-    report_link = driver.find_element(By.XPATH, f"//td[contains(.//a, '{property_id}')]//a[contains(@href, 'ReportGbn')]")
+    report_link = driver.find_element(By.XPATH,
+    f"//td[.//a[contains(text(), '{property_id}')]]//a[contains(@href, 'ReportGbn')]")
     report_link.click()
     time.sleep(2)
     
@@ -56,8 +57,6 @@ def download_images(driver, property_id, path):
     # 문자열 사용해서 단지 고유 번호 추출
     complex_no = current_url.split("/complexes/")[1].split("?")[0]
     print(complex_no)
-    
-    main_window = driver.window_handles[-1]
     
     # 사진 페이지 이동
     driver.get(f"https://land.naver.com/info/complexGallery.naver?rletNo={complex_no}&newComplex=Y")

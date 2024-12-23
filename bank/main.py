@@ -36,7 +36,10 @@ def get_property_id():
     
     # 확인 버튼 클릭 시
     def on_ok():
-        result.append(entry.get())
+        # 입력값을 strip()하여 공백 제거
+        value = entry.get().strip()
+        if value:  # 공백만 입력된 경우 제외
+            result.append(value)
         root.destroy()
     
     # 확인 버튼
