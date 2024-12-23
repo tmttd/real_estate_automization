@@ -20,6 +20,13 @@ from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import NoAlertPresentException
 from typing import List
 import keyboard
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
+
+card_path = os.getenv('CARD_PATH')
+shop_path = os.getenv('SHOP_PATH')
 
 class NaverBlogPoster:
     def __init__(self, driver):
@@ -146,10 +153,10 @@ class NaverBlogPoster:
         time.sleep(1)
         
         # 추가 이미지
-        image_path = get_specific_image(r"C:\Users\pqstv\Desktop\real_estate_automization\images\shop.jpg")
+        image_path = get_specific_image(shop_path)
         upload_images_to_blog(self.driver, [image_path])
         
-        image_path = get_specific_image(r"C:\Users\pqstv\Desktop\real_estate_automization\images\card.jpg")
+        image_path = get_specific_image(card_path)
         upload_images_to_blog(self.driver, [image_path])
 
         time.sleep(1)
