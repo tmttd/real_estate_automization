@@ -144,7 +144,8 @@ def main():
         
     finally:
         # 작업 완료 후 사용자 입력 대기
-        input("작업이 완료되었습니다. 브라우저를 종료하려면 Enter를 누르세요...")
+        print("작업이 완료되었습니다. 브라우저를 3초 뒤 종료합니다.")
+        time.sleep(3)
         driver.quit()
 
 if __name__ == "__main__":

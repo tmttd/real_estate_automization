@@ -7,7 +7,11 @@ from selenium.webdriver.common.by import By
 import time
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-import keyboard 
+import keyboard
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
 
 def get_map_images(complex_name: str) -> List[str]:
     """
@@ -19,7 +23,7 @@ def get_map_images(complex_name: str) -> List[str]:
     Returns:
         List[str]: 지도 이미지들의 전체 경로 리스트
     """
-    base_path = r"C:\Users\pqstv\Desktop\real_estate_automization\images"
+    base_path = os.getenv('SAVE_PATH')
     complex_path = os.path.join(base_path, complex_name)
     
     if not os.path.exists(complex_path):
@@ -42,7 +46,7 @@ def get_ground_plan_images(complex_name: str) -> List[str]:
     Returns:
         List[str]: 배치도 이미지들의 전체 경로 리스트
     """
-    base_path = r"C:\Users\pqstv\Desktop\real_estate_automization\images"
+    base_path = os.getenv('SAVE_PATH')
     complex_path = os.path.join(base_path, complex_name)
     
     if not os.path.exists(complex_path):
@@ -66,7 +70,7 @@ def select_random_images(complex_name: str, num_images: int = 3) -> List[str]:
     Returns:
         List[str]: 선택된 이미지들의 전체 경로 리스트
     """
-    base_path = r"C:\Users\pqstv\Desktop\real_estate_automization\images"
+    base_path = os.getenv('SAVE_PATH')
     complex_path = os.path.join(base_path, complex_name)
     
     if not os.path.exists(complex_path):
