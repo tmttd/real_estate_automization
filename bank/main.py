@@ -9,6 +9,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from dotenv import load_dotenv
 import os
+import sys
 
 # .env 파일 로드
 load_dotenv()
@@ -16,10 +17,37 @@ load_dotenv()
 def get_property_id():
     """GUI 창을 통해 사용자로부터 매물번호를 입력받습니다."""
     root = tk.Tk()
-    root.withdraw()
-    property_id = simpledialog.askstring("매물번호 입력", "매물번호를 입력하세요:")
-    root.destroy()
-    return property_id
+    root.title("매물번호 입력")
+    
+    # 메인 프레임 생성 (여백 추가)
+    frame = tk.Frame(root, padx=40, pady=30)
+    frame.pack(expand=True, fill='both')
+    
+    # 라벨 추가
+    label = tk.Label(frame, text="매물번호를 입력하세요", font=('Helvetica', 16))
+    label.pack(pady=(0, 20))
+    
+    # 입력창 생성
+    entry = tk.Entry(frame, font=('Helvetica', 16), width=30)
+    entry.pack()
+    
+    # 결과 저장 변수
+    result = []
+    
+    # 확인 버튼 클릭 시
+    def on_ok():
+        result.append(entry.get())
+        root.destroy()
+    
+    # 확인 버튼
+    tk.Button(frame, text="확인", command=on_ok, font=('Helvetica', 12)).pack(pady=(20, 0))
+    
+    # Enter 키로도 입력 가능
+    root.bind('<Return>', lambda event: on_ok())
+    entry.focus()
+    
+    root.mainloop()
+    return result[0] if result else None
 
 def get_random_user_agent():
     """랜덤 User-Agent 반환"""
@@ -60,41 +88,44 @@ def add_random_delay():
     time.sleep(random.uniform(2, 5))
 
 def main():
-    # 환경변수에서 설정값 로드
-    chrome_driver_path = os.getenv('CHROME_DRIVER_PATH')
-    naver_id = os.getenv('NAVER_ID')
-    naver_pwd = os.getenv('NAVER_PWD')
-    property_user_id = os.getenv('PROPERTY_USER_ID')
-    property_password = os.getenv('PROPERTY_PASSWORD')
-    save_path = os.getenv('SAVE_PATH')
-    
-    # 환경변수 확인
-    required_env_vars = {
-        'CHROME_DRIVER_PATH': chrome_driver_path,
-        'NAVER_ID': naver_id,
-        'NAVER_PWD': naver_pwd,
-        'PROPERTY_USER_ID': property_user_id,
-        'PROPERTY_PASSWORD': property_password,
-        'SAVE_PATH': save_path
-    }
-    
-    # 필수 환경변수 검증
-    missing_vars = [var for var, value in required_env_vars.items() if not value]
-    if missing_vars:
-        raise EnvironmentError(f"다음 환경변수가 설정되지 않았습니다: {', '.join(missing_vars)}")
-    
-    # 매물번호 입력받기
-    property_id = get_property_id()
-    if not property_id:
-        print("매물번호가 입력되지 않았습니다.")
-        return
-    
-    # Chrome 옵션 설정 및 드라이버 생성
-    chrome_options = setup_chrome_options()
-    service = webdriver.ChromeService(executable_path=chrome_driver_path)
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    root = None  # tkinter root 객체를 저장하기 위한 변수
+    driver = None  # webdriver 객체를 저장하기 위한 변수
     
     try:
+        # 환경변수에서 설정값 로드
+        chrome_driver_path = os.getenv('CHROME_DRIVER_PATH')
+        naver_id = os.getenv('NAVER_ID')
+        naver_pwd = os.getenv('NAVER_PWD')
+        property_user_id = os.getenv('PROPERTY_USER_ID')
+        property_password = os.getenv('PROPERTY_PASSWORD')
+        save_path = os.getenv('SAVE_PATH')
+        
+        # 환경변수 확인
+        required_env_vars = {
+            'CHROME_DRIVER_PATH': chrome_driver_path,
+            'NAVER_ID': naver_id,
+            'NAVER_PWD': naver_pwd,
+            'PROPERTY_USER_ID': property_user_id,
+            'PROPERTY_PASSWORD': property_password,
+            'SAVE_PATH': save_path
+        }
+        
+        # 필수 환경변수 검증
+        missing_vars = [var for var, value in required_env_vars.items() if not value]
+        if missing_vars:
+            raise EnvironmentError(f"다음 환경변수가 설정되지 않았습니다: {', '.join(missing_vars)}")
+        
+        # 매물번호 입력받기
+        property_id = get_property_id()
+        if not property_id:
+            print("매물번호가 입력되지 않았습니다.")
+            return
+        
+        # Chrome 옵션 설정 및 드라이버 생성
+        chrome_options = setup_chrome_options()
+        service = webdriver.ChromeService(executable_path=chrome_driver_path)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        
         # 1. 매물 정보 크롤링
         crawler = PropertyCrawler(driver=driver)
         add_random_delay()
@@ -143,10 +174,23 @@ def main():
         print(f"작업 중 오류 발생: {str(e)}")
         
     finally:
-        # 작업 완료 후 사용자 입력 대기
         print("작업이 완료되었습니다. 브라우저를 3초 뒤 종료합니다.")
         time.sleep(3)
-        driver.quit()
+        
+        # 드라이버 종료
+        if driver:
+            driver.quit()
+        
+        # 모든 tkinter 창 종료
+        if 'root' in globals():
+            try:
+                root.quit()
+                root.destroy()
+            except:
+                pass
+        
+        # 프로세스 강제 종료
+        os._exit(0)
 
 if __name__ == "__main__":
     main()
